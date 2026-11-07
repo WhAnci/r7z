@@ -37,8 +37,12 @@
 - `a` — add files/directories to a `.7z` archive
 - `x` — extract an archive
 - `l` — list archive metadata
-- Compression level `-m 1..9`
-- Thread count `-t N` (0 = all cores)
+- `t` — test archive integrity
+- Compression level `-m 1..9` (alias `--mx`)
+- Thread count `-t N` (0 = all cores, alias `--mmt`)
+- Password encryption `-p <password>`
+- Assume yes `-y`
+- Shell completions: `r7z completions <bash|zsh|fish|powershell>`
 - Progress bars via `indicatif`
 - Parallel file scanning via `rayon`
 

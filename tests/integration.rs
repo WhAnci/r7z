@@ -53,3 +53,37 @@ fn list_command() {
     assert!(String::from_utf8_lossy(&out.stdout).contains("archive:"));
     let _ = fs::remove_dir_all(&tmp);
 }
+
+#[test]
+fn password_roundtrip() {
+    let tmp = std::env::temp_dir().join("r7z_test_pw2");
+    let _ = fs::remove_dir_all(&tmp);
+    fs::create_dir_all(tmp.join("in")).unwrap();
+    fs::write(tmp.join("in/secret.txt"), b"top secret").unwrap();
+    let archive = tmp.join("enc.7z");
+    let bin = env!("CARGO_BIN_EXE_r7z");
+
+    let status = Command::new(bin)
+        .args(["a", archive.to_str().unwrap(), tmp.join("in").to_str().unwrap(), "-p", "mypass"])
+        .status().unwrap();
+    assert!(status.success());
+
+    let out = Command::new(bin)
+        .args(["t", archive.to_str().unwrap(), "-p", "wrong"])
+        .output().unwrap();
+    assert!(!out.status.success());
+
+    let out = Command::new(bin)
+        .args(["t", archive.to_str().unwrap(), "-p", "mypass"])
+        .output().unwrap();
+    assert!(out.status.success());
+
+    let extracted = tmp.join("out");
+    let status = Command::new(bin)
+        .args(["x", archive.to_str().unwrap(), "-o", extracted.to_str().unwrap(), "-p", "mypass"])
+        .status().unwrap();
+    assert!(status.success());
+    assert_eq!(fs::read_to_string(extracted.join("secret.txt")).unwrap(), "top secret");
+
+    let _ = fs::remove_dir_all(&tmp);
+}
