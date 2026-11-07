@@ -1,5 +1,5 @@
 /target
 /testdata
 /bench_work
-/benchmark_report.md
+# /benchmark_report.md  (kept in repo for reference)
 *.7z
