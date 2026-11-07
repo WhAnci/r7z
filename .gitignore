@@ -3,4 +3,5 @@
 /bench_work
 # /benchmark_report.md  (kept in repo for reference)
 *.7z
+/docs/blog_velog.md
 /test_smoke
