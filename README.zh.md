@@ -2,7 +2,7 @@
 
 > 7-Zip 核心（`a` / `x` 命令）的 Rust 重新实现，用于与原版 C/C++ `7z` 进行性能对比。
 
-[![CI](https://github.com/yourname/r7z/actions/workflows/ci.yml/badge.svg)](https://github.com/yourname/r7z/actions)
+[![CI](https://github.com/WhAnci/r7z/actions/workflows/ci.yml/badge.svg)](https://github.com/WhAnci/r7z/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **语言：** [English](README.md) (默认) · [한국어](README.ko.md) · 中文

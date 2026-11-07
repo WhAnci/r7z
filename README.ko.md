@@ -2,7 +2,7 @@
 
 > 7-Zip 코어(`a` / `x` 명령)의 Rust 재구현판. 원본 C/C++ `7z`와의 성능 비교를 위해 제작되었습니다.
 
-[![CI](https://github.com/yourname/r7z/actions/workflows/ci.yml/badge.svg)](https://github.com/yourname/r7z/actions)
+[![CI](https://github.com/WhAnci/r7z/actions/workflows/ci.yml/badge.svg)](https://github.com/WhAnci/r7z/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **언어:** [English](README.md) (기본) · 한국어 · [中文](README.zh.md)

@@ -7,7 +7,7 @@
 I built a Rust re-implementation of 7-Zip's core commands (`a`/`x`) and
 benchmarked against the original C++ `7z`.
 
-Repo: https://github.com/yourname/r7z
+Repo: https://github.com/WhAnci/r7z
 
 Highlights:
 - Pure Rust, no C toolchain needed (`cargo build --release`)

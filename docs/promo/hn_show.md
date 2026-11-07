@@ -2,7 +2,7 @@
 
 **Title:** Show HN: r7z – Rust re-implementation of 7-Zip core, ~4–20× less memory
 
-**URL:** https://github.com/yourname/r7z
+**URL:** https://github.com/WhAnci/r7z
 
 **Text:**
 

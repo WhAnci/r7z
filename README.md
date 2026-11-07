@@ -3,7 +3,7 @@
 > A Rust re-implementation of the 7-Zip core (`a` / `x` commands), built for
 > benchmarking and comparison against the original C/C++ `7z`.
 
-[![CI](https://github.com/yourname/r7z/actions/workflows/ci.yml/badge.svg)](https://github.com/yourname/r7z/actions)
+[![CI](https://github.com/WhAnci/r7z/actions/workflows/ci.yml/badge.svg)](https://github.com/WhAnci/r7z/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg)](https://www.rust-lang.org)
 

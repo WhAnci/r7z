@@ -40,4 +40,4 @@ and measured.
 - Real multi-threading (currently single-threaded encoder)
 - Solid-block size knob
 
-Repo: https://github.com/yourname/r7z (English/Korean/Chinese README)
+Repo: https://github.com/WhAnci/r7z (English/Korean/Chinese README)

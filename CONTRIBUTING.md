@@ -5,7 +5,7 @@ Thanks for your interest! r7z is a small, focused project.
 ## Getting started
 
 ```bash
-git clone https://github.com/yourname/r7z
+git clone https://github.com/WhAnci/r7z
 cd r7z
 cargo build
 cargo test
