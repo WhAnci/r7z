@@ -3,7 +3,7 @@
 //! Backend: `sevenz-turbo` (solid + multi-threaded 7z, tuned for speed).
 
 use anyhow::{Context, Result};
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 use env_logger;
 use indicatif::{ProgressBar, ProgressStyle};
 use mimalloc::MiMalloc;
@@ -64,6 +64,13 @@ enum Commands {
     L {
         archive: PathBuf,
     },
+
+    /// Generate shell completions
+    Completions {
+        /// Shell to generate completions for
+        #[arg(value_enum)]
+        shell: clap_complete::Shell,
+    },
 }
 
 fn main() {
@@ -89,6 +96,10 @@ fn run() -> Result<()> {
             threads,
         } => cmd_extract(&archive, &output, threads),
         Commands::L { archive } => cmd_list(&archive),
+        Commands::Completions { shell } => {
+            clap_complete::generate(shell, &mut Cli::command(), "r7z", &mut std::io::stdout());
+            Ok(())
+        }
     }
 }
 
