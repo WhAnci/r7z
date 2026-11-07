@@ -75,6 +75,13 @@ python scripts/benchmark.py
 
 详细结果：[benchmark_report.md](benchmark_report.md)
 
+
+![Compression time](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_compress.png)
+
+![Decompression time](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_decompress.png)
+
+![Peak memory](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_memory.png)
+
 ## 许可证
 
 MIT — [LICENSE](LICENSE)。

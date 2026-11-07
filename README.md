@@ -95,6 +95,10 @@ Measured: wall-clock time, archive ratio, peak RSS, single vs multi-thread.
 
 See full results: [benchmark_report.md](benchmark_report.md)
 
+![Compression time](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_compress.png)
+
+![Decompression time](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_decompress.png)
+
 ![Peak memory](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_memory.png)
 
 ## Build requirements
