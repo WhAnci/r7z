@@ -9,7 +9,7 @@
 
 ---
 
-## ✨ r7z 的优势（一目了然）
+## r7z 的优势（一目了然）
 
 | 优势 | r7z (Rust) | 7-Zip (C++) |
 |---|---|---|
@@ -20,13 +20,13 @@
 | **分配器抖动** | 有界、可预测的缓冲区 | 大型 solid 块 arena |
 | **崩溃安全性** | `panic=abort`，安全代码无段错误 | 异常输入可能触发 |
 | **压缩率** | A/C 与 7z 相当 (~0.02% / ~100%) | 基准 |
-| **速度** | 较慢（纯 Rust 编码器） | ⚡ 更快（SIMD + 调优线程） |
+| **速度** | 较慢（纯 Rust 编码器） | 更快（SIMD + 调优线程） |
 
 > **坦诚总结：** `r7z` 用原始速度换取 **4–20 倍更低的内存占用**、内存安全与简单的跨平台构建。吞吐量与多线程扩展性仍然是 7-Zip 的强项。详见 [基准报告](benchmark_report.md)。
 
 ---
 
-## 📦 功能
+## 功能
 
 - `a` — 将文件/目录加入 `.7z` 压缩包
 - `x` — 解压压缩包
@@ -36,18 +36,18 @@
 - 基于 `indicatif` 的进度条
 - 基于 `rayon` 的并行文件扫描
 
-## 🗂 项目结构
+## 项目结构
 
 ```
 r7z/
 ├── Cargo.toml
 ├── src/
-│   └── main.rs
+│ └── main.rs
 ├── scripts/
-│   ├── gen_testdata.py
-│   └── benchmark.py
+│ ├── gen_testdata.py
+│ └── benchmark.py
 ├── docs/
-│   └── optimization.md
+│ └── optimization.md
 ├── .github/workflows/ci.yml
 ├── .cargo/config.toml
 ├── benchmark_report.md
@@ -55,7 +55,7 @@ r7z/
 └── README*.md
 ```
 
-## 🚀 快速开始
+## 快速开始
 
 ```bash
 cargo build --release
@@ -66,7 +66,7 @@ cargo build --release
 
 Windows: `target\release\r7z.exe`。
 
-## 📊 基准测试
+## 基准测试
 
 ```bash
 python scripts/gen_testdata.py
@@ -75,6 +75,6 @@ python scripts/benchmark.py
 
 详细结果：[benchmark_report.md](benchmark_report.md)
 
-## 📄 许可证
+## 许可证
 
 MIT — [LICENSE](LICENSE)。

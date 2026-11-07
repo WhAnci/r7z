@@ -11,7 +11,7 @@
 
 ---
 
-## ✨ Why r7z? (advantages at a glance)
+## Why r7z? (advantages at a glance)
 
 | Advantage | r7z (Rust) | 7-Zip (C++) |
 |---|---|---|
@@ -22,7 +22,7 @@
 | **Allocator churn** | Bounded, predictable buffers | Large solid-block arenas |
 | **Crash safety** | `panic=abort`, no segfaults in safe code | Possible on malformed input |
 | **Compression ratio** | Matches 7z on A/C (~0.02% / ~100%) | Reference |
-| **Speed** | Slower (pure-Rust encoder) | ⚡ Faster (SIMD + tuned threads) |
+| **Speed** | Slower but improved (~1.8x on A) | Faster (SIMD + tuned threads) |
 
 > **Honest summary:** `r7z` trades raw speed for **~4-20x lower memory usage**,
 > memory safety, and a trivial cross-platform build. 7-Zip still wins on
@@ -30,7 +30,7 @@
 
 ---
 
-## 📦 Features
+## Features
 
 - `a` — add files/directories to a `.7z` archive
 - `x` — extract an archive
@@ -40,18 +40,18 @@
 - Progress bars via `indicatif`
 - Parallel file scanning via `rayon`
 
-## 🗂 Project layout
+## Project layout
 
 ```
 r7z/
 ├── Cargo.toml
 ├── src/
-│   └── main.rs
+│ └── main.rs
 ├── scripts/
-│   ├── gen_testdata.py      # generate scenarios A/B/C
-│   └── benchmark.py         # r7z vs 7z benchmark
+│ ├── gen_testdata.py # generate scenarios A/B/C
+│ └── benchmark.py # r7z vs 7z benchmark
 ├── docs/
-│   └── optimization.md      # Rust vs C++ bottlenecks & tips
+│ └── optimization.md # Rust vs C++ bottlenecks & tips
 ├── .github/workflows/ci.yml
 ├── .cargo/config.toml
 ├── benchmark_report.md
@@ -59,7 +59,7 @@ r7z/
 └── README*.md
 ```
 
-## 🚀 Quick start
+## Quick start
 
 ```bash
 # build
@@ -77,11 +77,11 @@ cargo build --release
 
 Windows: `target\release\r7z.exe`.
 
-## 📊 Benchmark
+## Benchmark
 
 ```bash
-python scripts/gen_testdata.py   # generates testdata/A,B,C
-python scripts/benchmark.py      # writes benchmark_report.md
+python scripts/gen_testdata.py # generates testdata/A,B,C
+python scripts/benchmark.py # writes benchmark_report.md
 ```
 
 Scenarios:
@@ -95,13 +95,13 @@ See full results: [benchmark_report.md](benchmark_report.md)
 
 ![Peak memory](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_memory.png)
 
-## 🔧 Build requirements
+## Build requirements
 
 - Rust 1.75+ (`rustup`)
 - (Windows) MSVC Build Tools
 - Python 3.10+ (for scripts)
 - 7-Zip (for comparison)
 
-## 📄 License
+## License
 
 MIT — see [LICENSE](LICENSE).

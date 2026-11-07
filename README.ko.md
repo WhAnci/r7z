@@ -9,7 +9,7 @@
 
 ---
 
-## ✨ r7z가 더 좋은 점 (한눈에 보기)
+## r7z가 더 좋은 점 (한눈에 보기)
 
 | 장점 | r7z (Rust) | 7-Zip (C++) |
 |---|---|---|
@@ -20,13 +20,13 @@
 | **할당자 churn** | 제한적이고 예측 가능한 버퍼 | 큰 solid 블록 아레나 |
 | **크래시 안전성** | `panic=abort`, 안전 코드에서 세그폴트 없음 | 잘못된 입력에서 발생 가능 |
 | **압축률** | A/C에서 7z와 동등 (~0.02% / ~100%) | 기준 |
-| **속도** | 느림 (순수 Rust 인코더) | ⚡ 빠름 (SIMD + 튜닝된 스레드) |
+| **속도** | 느림 (순수 Rust 인코더) | 빠름 (SIMD + 튜닝된 스레드) |
 
 > **솔직한 요약:** `r7z`는 원시 속도 대신 **4~20배 낮은 메모리 사용량**, 메모리 안전성, 손쉬운 크로스 플랫폼 빌드를 제공합니다. 처리량과 멀티스레드 확장성은 여전히 7-Zip이 우세합니다. [벤치마크 리포트](benchmark_report.md) 참고.
 
 ---
 
-## 📦 기능
+## 기능
 
 - `a` — 파일/디렉터리를 `.7z` 아카이브에 추가
 - `x` — 아카이브 해제
@@ -36,18 +36,18 @@
 - `indicatif` 기반 진행률 표시
 - `rayon` 기반 병렬 파일 스캔
 
-## 🗂 프로젝트 구조
+## 프로젝트 구조
 
 ```
 r7z/
 ├── Cargo.toml
 ├── src/
-│   └── main.rs
+│ └── main.rs
 ├── scripts/
-│   ├── gen_testdata.py
-│   └── benchmark.py
+│ ├── gen_testdata.py
+│ └── benchmark.py
 ├── docs/
-│   └── optimization.md
+│ └── optimization.md
 ├── .github/workflows/ci.yml
 ├── .cargo/config.toml
 ├── benchmark_report.md
@@ -55,7 +55,7 @@ r7z/
 └── README*.md
 ```
 
-## 🚀 빠른 시작
+## 빠른 시작
 
 ```bash
 cargo build --release
@@ -66,7 +66,7 @@ cargo build --release
 
 Windows: `target\release\r7z.exe`.
 
-## 📊 벤치마크
+## 벤치마크
 
 ```bash
 python scripts/gen_testdata.py
@@ -75,6 +75,6 @@ python scripts/benchmark.py
 
 자세한 결과: [benchmark_report.md](benchmark_report.md)
 
-## 📄 라이선스
+## 라이선스
 
 MIT — [LICENSE](LICENSE).

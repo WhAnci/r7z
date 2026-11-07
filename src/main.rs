@@ -1,22 +1,29 @@
 //! r7z - a Rust re-implementation of the 7-Zip core (a/x commands).
 //!
-//! Design notes
-//! ------------
-//! * Archive I/O is delegated to the `sevenz-rust` crate (LZMA2 solid blocks),
-//!   which is the closest pure-Rust equivalent of the 7-Zip engine.
-//! * File enumeration and hashing are parallelised with `rayon`.
-//! * Long-running operations report progress through `indicatif`.
-//! * Compression level (1..=9) and thread count are user controllable so that
-//!   single-thread vs multi-thread speedups can be measured.
+//! Improvements over the initial version:
+//!  * Honours the `-m` level via `LZMA2Options::with_preset` (lower = faster).
+//!  * No temporary staging copy: inputs are added directly to the archive.
+//!  * `mimalloc` global allocator for lower fragmentation / faster allocs.
+//!  * `target-cpu=native` (see .cargo/config.toml) enables auto-vectorisation.
 
 use anyhow::{Context, Result};
+use env_logger;
 use clap::{Parser, Subcommand};
 use indicatif::{ProgressBar, ProgressStyle};
+use mimalloc::MiMalloc;
 use rayon::prelude::*;
-use sevenz_rust::{compress_to_path, decompress_file};
+use sevenz_rust::{
+    decompress_file, MethodOptions, SevenZArchiveEntry, SevenZMethod, SevenZMethodConfiguration,
+    SevenZWriter,
+};
+use sevenz_rust::lzma::LZMA2Options;
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
 
 /// Top-level CLI.
 #[derive(Parser, Debug)]
@@ -104,7 +111,6 @@ fn resolve_threads(n: usize) -> usize {
 /// Configure the global rayon thread pool.
 fn configure_pool(threads: usize) {
     let n = resolve_threads(threads);
-    // Best-effort: ignore errors if already initialised.
     let _ = rayon::ThreadPoolBuilder::new()
         .num_threads(n)
         .build_global();
@@ -116,14 +122,13 @@ fn cmd_add(archive: &Path, inputs: &[PathBuf], level: u8, threads: usize) -> Res
     configure_pool(threads);
     let t0 = Instant::now();
 
-    // 1. Collect every input file (parallel walk).
+    // 1. Collect every input file (parallel walk) for progress + validation.
     let files = collect_files(inputs)?;
     if files.is_empty() {
         anyhow::bail!("no input files found");
     }
     println!("collected {} files", files.len());
 
-    // 2. Progress bar sized to file count.
     let pb = ProgressBar::new(files.len() as u64);
     pb.set_style(
         ProgressStyle::with_template(
@@ -133,8 +138,6 @@ fn cmd_add(archive: &Path, inputs: &[PathBuf], level: u8, threads: usize) -> Res
         .progress_chars("#>-"),
     );
 
-    // 3. Pre-compute a lightweight checksum / size tally in parallel to keep
-    //    the I/O pipeline warm (also validates readability).
     let total_bytes: u64 = files
         .par_iter()
         .map(|p| {
@@ -146,16 +149,26 @@ fn cmd_add(archive: &Path, inputs: &[PathBuf], level: u8, threads: usize) -> Res
     pb.finish_with_message("scan complete");
     println!("total input size: {} bytes", total_bytes);
 
-    // 4. Delegate the actual 7z encoding to sevenz-rust.
-    //    NOTE: sevenz-rust manages its own LZMA2 stream; `level` is honoured
-    //    through its default preset. For finer control see the tuning section.
+    // 2. Encode directly with sevenz-rust, honouring the requested level.
     let t1 = Instant::now();
-    // sevenz-rust's high-level helper takes a single input root; when several
-    // inputs are given we stage them into a temporary directory first.
-    let stage = stage_inputs(inputs)?;
-    compress_to_path(&stage, archive)
-        .with_context(|| format!("failed to write archive {}", archive.display()))?;
-    let _ = fs::remove_dir_all(&stage);
+    let mut writer = SevenZWriter::new(
+        fs::File::create(archive)
+            .with_context(|| format!("cannot create archive {}", archive.display()))?,
+    )
+    .map_err(|e| anyhow::anyhow!(e))?;
+
+    let preset = (level as u32).clamp(1, 9);
+    let opts = LZMA2Options::with_preset(preset);
+    let cfg = SevenZMethodConfiguration::new(SevenZMethod::LZMA2)
+        .with_options(MethodOptions::LZMA2(opts));
+    writer.set_content_methods(vec![cfg]);
+
+    for inp in inputs {
+        add_path(&mut writer, inp)?;
+    }
+    writer
+        .finish()
+        .with_context(|| format!("failed to finalise {}", archive.display()))?;
 
     let elapsed = t0.elapsed();
     println!(
@@ -169,44 +182,49 @@ fn cmd_add(archive: &Path, inputs: &[PathBuf], level: u8, threads: usize) -> Res
     Ok(())
 }
 
-/// Stage multiple inputs into one temporary directory so sevenz-rust can
-/// consume a single root (mirrors `7z a archive.7z a/ b/`).
-fn stage_inputs(inputs: &[PathBuf]) -> Result<PathBuf> {
-    let stage = std::env::temp_dir().join(format!("r7z_stage_{}", std::process::id()));
-    if stage.exists() {
-        fs::remove_dir_all(&stage)?;
-    }
-    fs::create_dir_all(&stage)?;
-    for inp in inputs {
-        let name = inp
-            .file_name()
-            .map(|n| n.to_os_string())
-            .unwrap_or_else(|| "input".into());
-        let dst = stage.join(name);
-        if inp.is_dir() {
-            copy_dir_recursive(inp, &dst)?;
-        } else {
-            if let Some(parent) = dst.parent() {
-                fs::create_dir_all(parent)?;
-            }
-            fs::copy(inp, &dst)?;
-        }
-    }
-    Ok(stage)
+/// Recursively add a file or directory to the archive, preserving the top-level
+/// name (mirrors `7z a archive.7z path`).
+fn add_path<W: Write + std::io::Seek>(writer: &mut SevenZWriter<W>, path: &Path) -> Result<()> {
+    let root = path.parent().unwrap_or_else(|| Path::new(""));
+    add_recursive(writer, path, root)
 }
 
-fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<()> {
-    fs::create_dir_all(dst)?;
-    for entry in fs::read_dir(src)? {
-        let entry = entry?;
-        let ty = entry.file_type()?;
-        let from = entry.path();
-        let to = dst.join(entry.file_name());
-        if ty.is_dir() {
-            copy_dir_recursive(&from, &to)?;
-        } else {
-            fs::copy(&from, &to)?;
+fn add_recursive<W: Write + std::io::Seek>(
+    writer: &mut SevenZWriter<W>,
+    src: &Path,
+    root: &Path,
+) -> Result<()> {
+    let name = if root.as_os_str().is_empty() {
+        src.file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_default()
+    } else {
+        src.strip_prefix(root)
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or_else(|_| {
+                src.file_name()
+                    .map(|n| n.to_string_lossy().to_string())
+                    .unwrap_or_default()
+            })
+    };
+
+    let entry = SevenZArchiveEntry::from_path(src, name);
+    if src.is_dir() {
+        writer
+            .push_archive_entry::<&[u8]>(entry, None)
+            .map_err(|e| anyhow::anyhow!(e))?;
+        for dir in fs::read_dir(src)? {
+            let dir = dir?;
+            let ft = dir.file_type()?;
+            if ft.is_dir() || ft.is_file() {
+                add_recursive(writer, &dir.path(), root)?;
+            }
         }
+    } else {
+        let f = fs::File::open(src).with_context(|| format!("cannot open {}", src.display()))?;
+        writer
+            .push_archive_entry(entry, Some(f))
+            .map_err(|e| anyhow::anyhow!(e))?;
     }
     Ok(())
 }
@@ -265,8 +283,7 @@ fn cmd_extract(archive: &Path, output: &Path, threads: usize) -> Result<()> {
     Ok(())
 }
 
-/// `l` command (best-effort listing via decompress metadata is not exposed;
-/// we report archive size only).
+/// `l` command.
 fn cmd_list(archive: &Path) -> Result<()> {
     let meta = fs::metadata(archive)?;
     println!("archive: {}  size: {} bytes", archive.display(), meta.len());
