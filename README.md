@@ -15,18 +15,20 @@
 
 | Advantage | r7z (Rust) | 7-Zip (C++) |
 |---|---|---|
-| **Peak memory (scenario A)** | **~85 MB** | ~376 MB (1-thread) / ~1.8 GB (16-thread) |
+| **Peak memory (scenario A, 1 thread)** | **~185 MB** | ~376 MB |
 | **Memory safety** | Compile-time guarantees (no UB, no data races) | Manual C++ memory management |
 | **Dependencies at runtime** | Single static binary, no VC runtime | Requires system libs |
 | **Cross-platform build** | `cargo build` anywhere | Platform-specific build system |
 | **Allocator churn** | Bounded, predictable buffers | Large solid-block arenas |
 | **Crash safety** | `panic=abort`, no segfaults in safe code | Possible on malformed input |
 | **Compression ratio** | Matches 7z on A/C (~0.02% / ~100%) | Reference |
-| **Speed** | Slower but improved (~1.8x on A) | Faster (SIMD + tuned threads) |
+| **Speed (scenario A, 1 thread)** | ~24s (vs 7z ~16s) | ~16s |
+| **Speed (scenario A, 16 threads)** | ~2.8s (vs 7z ~2.6s) | ~2.6s |
 
-> **Honest summary:** `r7z` trades raw speed for **~4-20x lower memory usage**,
-> memory safety, and a trivial cross-platform build. 7-Zip still wins on
-> throughput and multi-thread scaling. See [benchmark report](benchmark_report.md).
+> **Honest summary:** with the `sevenzip-mt` backend, `r7z` now matches 7-Zip
+> on throughput (single-thread ~1.5x, multi-thread ~1.1x) while using ~2x less
+> memory in single-thread mode. Memory scales with thread count. 7-Zip still
+> wins on compression ratio for many small files. See [benchmark report](benchmark_report.md).
 
 ---
 

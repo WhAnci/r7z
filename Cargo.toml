@@ -12,6 +12,7 @@ authors = ["r7z contributors"]
 clap = { version = "4.5", features = ["derive"] }
 # 7z archive read/write (LZMA2 + solid blocks)
 sevenz-rust = "0.6"
+sevenzip-mt = "0.2"
 # Low-level LZMA/XZ primitives (used for tuning experiments)
 lzma-rs = "0.3"
 xz2 = "0.1"
