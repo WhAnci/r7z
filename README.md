@@ -9,6 +9,8 @@
 
 **Languages:** English (default) · [한국어](README.ko.md) · [中文](README.zh.md)
 
+![Demo](docs/demo.gif)
+
 ---
 
 ## Trade-offs (r7z vs 7-Zip)
