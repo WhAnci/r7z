@@ -1,7 +1,6 @@
 //! r7z - a Rust re-implementation of the 7-Zip core (a/x commands).
 //!
-//! Backend: `sevenzip-mt` for multi-threaded 7z creation (7z-compatible
-//! output), `sevenz-rust` for extraction. Tuned for low memory + speed.
+//! Backend: `sevenz-turbo` (solid + multi-threaded 7z, tuned for speed).
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -9,8 +8,9 @@ use env_logger;
 use indicatif::{ProgressBar, ProgressStyle};
 use mimalloc::MiMalloc;
 use rayon::prelude::*;
-use sevenzip_mt::{Lzma2Config, SevenZipWriter};
-use sevenz_rust::decompress_file;
+use sevenz_turbo::encoder_options::Lzma2Options;
+use sevenz_turbo::{ArchiveWriter, EncoderConfiguration};
+use sevenz_turbo::decompress_file;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -104,15 +104,15 @@ fn resolve_threads(n: usize) -> usize {
 /// `a` command.
 fn cmd_add(archive: &Path, inputs: &[PathBuf], level: u8, threads: usize) -> Result<()> {
     let t0 = Instant::now();
+    let nth = resolve_threads(threads) as u32;
 
-    // 1. Collect entries + progress scan.
-    let entries = collect_entries(inputs)?;
-    if entries.is_empty() {
+    // 1. Collect files for progress.
+    let files = collect_files(inputs)?;
+    if files.is_empty() {
         anyhow::bail!("no input files found");
     }
-    println!("collected {} files", entries.len());
+    println!("collected {} files", files.len());
 
-    let files: Vec<PathBuf> = entries.iter().map(|(p, _)| p.clone()).collect();
     let pb = ProgressBar::new(files.len() as u64);
     pb.set_style(
         ProgressStyle::with_template(
@@ -132,28 +132,19 @@ fn cmd_add(archive: &Path, inputs: &[PathBuf], level: u8, threads: usize) -> Res
     pb.finish_with_message("scan complete");
     println!("total input size: {} bytes", total_bytes);
 
-    // 2. Encode with sevenzip-mt (multi-threaded, 7z-compatible).
+    // 2. Encode with sevenz-turbo (solid + multi-threaded).
     let t1 = Instant::now();
     let out = fs::File::create(archive)
         .with_context(|| format!("cannot create archive {}", archive.display()))?;
-    let mut writer = SevenZipWriter::new(out).map_err(|e| anyhow::anyhow!(e))?;
+    let mut writer = ArchiveWriter::new(out).map_err(|e| anyhow::anyhow!(e))?;
 
-    let mut cfg = Lzma2Config {
-        preset: (level as u32).clamp(0, 9),
-        dict_size: None,
-        block_size: None,
-    };
-    // Keep memory modest: cap dict size at 32 MiB for levels >= 7.
-    if level >= 7 {
-        cfg.dict_size = Some(32 * 1024 * 1024);
-    }
-    writer.set_config(cfg);
-    writer.set_num_threads(Some(resolve_threads(threads)));
+    let opts = Lzma2Options::from_level_mt(level as u32, nth, 1 << 20);
+    let cfg = EncoderConfiguration::from(opts);
+    writer.set_content_methods(vec![cfg]);
 
-    for (disk, name) in &entries {
-        let sp = disk.to_str().ok_or_else(|| anyhow::anyhow!("non-utf8 path"))?;
+    for inp in inputs {
         writer
-            .add_file(sp, name)
+            .push_source_path(inp, |_| true)
             .map_err(|e| anyhow::anyhow!(e))?;
     }
 
@@ -164,26 +155,20 @@ fn cmd_add(archive: &Path, inputs: &[PathBuf], level: u8, threads: usize) -> Res
         "archive created: {} (level={}, threads={}) in {:.2}s (encode {:.2}s)",
         archive.display(),
         level,
-        resolve_threads(threads),
+        nth,
         elapsed.as_secs_f64(),
         t1.elapsed().as_secs_f64()
     );
     Ok(())
 }
 
-/// Collect (disk_path, archive_name) pairs, preserving top-level dir name.
-fn collect_entries(inputs: &[PathBuf]) -> Result<Vec<(PathBuf, String)>> {
+fn collect_files(inputs: &[PathBuf]) -> Result<Vec<PathBuf>> {
     let mut out = Vec::new();
     for inp in inputs {
         if inp.is_file() {
-            let name = inp
-                .file_name()
-                .map(|n| n.to_string_lossy().to_string())
-                .unwrap_or_default();
-            out.push((inp.clone(), name));
+            out.push(inp.clone());
         } else if inp.is_dir() {
-            let root = inp.parent().unwrap_or_else(|| Path::new(""));
-            walk_entries(inp, root, &mut out)?;
+            walk_dir(inp, &mut out)?;
         } else {
             anyhow::bail!("input not found: {}", inp.display());
         }
@@ -191,23 +176,15 @@ fn collect_entries(inputs: &[PathBuf]) -> Result<Vec<(PathBuf, String)>> {
     Ok(out)
 }
 
-fn walk_entries(dir: &Path, root: &Path, out: &mut Vec<(PathBuf, String)>) -> Result<()> {
-    for entry in fs::read_dir(dir)? {
+fn walk_dir(root: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
+    for entry in fs::read_dir(root)? {
         let entry = entry?;
         let path = entry.path();
-        let ft = entry.file_type()?;
-        if ft.is_dir() {
-            walk_entries(&path, root, out)?;
-        } else if ft.is_file() {
-            let name = path
-                .strip_prefix(root)
-                .map(|p| p.to_string_lossy().to_string())
-                .unwrap_or_else(|_| {
-                    path.file_name()
-                        .map(|n| n.to_string_lossy().to_string())
-                        .unwrap_or_default()
-                });
-            out.push((path, name));
+        let ty = entry.file_type()?;
+        if ty.is_dir() {
+            walk_dir(&path, out)?;
+        } else if ty.is_file() {
+            out.push(path);
         }
     }
     Ok(())
@@ -225,8 +202,7 @@ fn cmd_extract(archive: &Path, output: &Path, threads: usize) -> Result<()> {
     pb.set_message("extracting");
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
-    decompress_file(archive, output)
-        .with_context(|| format!("failed to extract {}", archive.display()))?;
+    decompress_file(archive, output).map_err(|e| anyhow::anyhow!(e))?;
 
     pb.finish_with_message("done");
     println!(
