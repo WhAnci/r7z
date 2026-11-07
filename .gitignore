@@ -1,0 +1,5 @@
+/target
+/testdata
+/bench_work
+/benchmark_report.md
+*.7z

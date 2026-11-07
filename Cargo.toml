@@ -1,0 +1,40 @@
+[package]
+name = "r7z"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+description = "Rust clone of 7-Zip core (a/x commands) for benchmarking"
+license = "MIT"
+authors = ["r7z contributors"]
+
+[dependencies]
+# CLI parsing with derive macros
+clap = { version = "4.5", features = ["derive"] }
+# 7z archive read/write (LZMA2 + solid blocks)
+sevenz-rust = "0.6"
+# Low-level LZMA/XZ primitives (used for tuning experiments)
+lzma-rs = "0.3"
+xz2 = "0.1"
+# Parallelism
+rayon = "1.10"
+# Progress bars
+indicatif = "0.17"
+# CPU count detection
+num_cpus = "1.16"
+# Error handling
+anyhow = "1.0"
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.release-with-debug]
+inherits = "release"
+debug = true
+strip = false
