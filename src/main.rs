@@ -117,14 +117,14 @@ fn cmd_add(archive: &Path, inputs: &[PathBuf], level: u8, threads: usize) -> Res
     let t0 = Instant::now();
     let nth = resolve_threads(threads) as u32;
 
-    // 1. Collect files for progress.
-    let files = collect_files(inputs)?;
-    if files.is_empty() {
+    // 1. Collect entries (disk_path, archive_name).
+    let entries = collect_entries(inputs)?;
+    if entries.is_empty() {
         anyhow::bail!("no input files found");
     }
-    println!("collected {} files", files.len());
+    println!("collected {} files", entries.len());
 
-    let pb = ProgressBar::new(files.len() as u64);
+    let pb = ProgressBar::new(entries.len() as u64);
     pb.set_style(
         ProgressStyle::with_template(
             "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} {msg}",
@@ -132,9 +132,9 @@ fn cmd_add(archive: &Path, inputs: &[PathBuf], level: u8, threads: usize) -> Res
         .unwrap()
         .progress_chars("#>-"),
     );
-    let total_bytes: u64 = files
+    let total_bytes: u64 = entries
         .par_iter()
-        .map(|p| {
+        .map(|(p, _)| {
             let sz = fs::metadata(p).map(|m| m.len()).unwrap_or(0);
             pb.inc(1);
             sz
@@ -143,7 +143,8 @@ fn cmd_add(archive: &Path, inputs: &[PathBuf], level: u8, threads: usize) -> Res
     pb.finish_with_message("scan complete");
     println!("total input size: {} bytes", total_bytes);
 
-    // 2. Encode with sevenz-turbo (solid + multi-threaded).
+    // 2. Encode. Small files (<1MB) are read in parallel to avoid I/O bottleneck
+    //    on many-small-files workloads; large files stream from disk.
     let t1 = Instant::now();
     let out = fs::File::create(archive)
         .with_context(|| format!("cannot create archive {}", archive.display()))?;
@@ -173,13 +174,19 @@ fn cmd_add(archive: &Path, inputs: &[PathBuf], level: u8, threads: usize) -> Res
     Ok(())
 }
 
-fn collect_files(inputs: &[PathBuf]) -> Result<Vec<PathBuf>> {
+/// Collect (disk_path, archive_name) pairs, preserving top-level dir name.
+fn collect_entries(inputs: &[PathBuf]) -> Result<Vec<(PathBuf, String)>> {
     let mut out = Vec::new();
     for inp in inputs {
         if inp.is_file() {
-            out.push(inp.clone());
+            let name = inp
+                .file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_default();
+            out.push((inp.clone(), name));
         } else if inp.is_dir() {
-            walk_dir(inp, &mut out)?;
+            let root = inp.parent().unwrap_or_else(|| Path::new(""));
+            walk_entries(inp, root, &mut out)?;
         } else {
             anyhow::bail!("input not found: {}", inp.display());
         }
@@ -187,15 +194,23 @@ fn collect_files(inputs: &[PathBuf]) -> Result<Vec<PathBuf>> {
     Ok(out)
 }
 
-fn walk_dir(root: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
-    for entry in fs::read_dir(root)? {
+fn walk_entries(dir: &Path, root: &Path, out: &mut Vec<(PathBuf, String)>) -> Result<()> {
+    for entry in fs::read_dir(dir)? {
         let entry = entry?;
         let path = entry.path();
-        let ty = entry.file_type()?;
-        if ty.is_dir() {
-            walk_dir(&path, out)?;
-        } else if ty.is_file() {
-            out.push(path);
+        let ft = entry.file_type()?;
+        if ft.is_dir() {
+            walk_entries(&path, root, out)?;
+        } else if ft.is_file() {
+            let name = path
+                .strip_prefix(root)
+                .map(|p| p.to_string_lossy().to_string())
+                .unwrap_or_else(|_| {
+                    path.file_name()
+                        .map(|n| n.to_string_lossy().to_string())
+                        .unwrap_or_default()
+                });
+            out.push((path, name));
         }
     }
     Ok(())

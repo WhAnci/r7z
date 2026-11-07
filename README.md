@@ -11,24 +11,24 @@
 
 ---
 
-## Why r7z? (advantages at a glance)
+## Trade-offs (r7z vs 7-Zip)
 
-| Advantage | r7z (Rust) | 7-Zip (C++) |
+| | r7z (Rust) | 7-Zip (C++) |
 |---|---|---|
-| **Peak memory (scenario A, 1 thread)** | **~101 MB** | ~376 MB |
-| **Memory safety** | Compile-time guarantees (no UB, no data races) | Manual C++ memory management |
-| **Dependencies at runtime** | Single static binary, no VC runtime | Requires system libs |
-| **Cross-platform build** | `cargo build` anywhere | Platform-specific build system |
-| **Allocator churn** | Bounded, predictable buffers | Large solid-block arenas |
-| **Crash safety** | `panic=abort`, no segfaults in safe code | Possible on malformed input |
-| **Compression ratio** | Matches 7z on A/C (~0.02% / ~100%) | Reference |
-| **Speed (scenario A, 1 thread)** | ~12.8s (vs 7z ~16.6s) | ~16.6s |
-| **Speed (scenario A, 16 threads)** | ~1.6s (vs 7z ~2.6s) | ~2.6s |
+| **Speed (large text, 1 thread)** | ~12.8s | ~16.6s |
+| **Speed (large text, 16 threads)** | ~1.6s | ~2.6s |
+| **Speed (many small files)** | slower (~42s) | faster (~1.7s) |
+| **Peak memory (single thread)** | ~101 MB | ~376 MB |
+| **Peak memory (16 threads)** | ~812 MB | ~1811 MB |
+| **Compression ratio** | matches 7z | reference |
+| **Memory safety** | compile-time | manual |
+| **Runtime dependencies** | none (static binary) | system libs |
+| **Cross-platform build** | `cargo build` | platform-specific |
+| **Crash safety** | `panic=abort` | possible on bad input |
 
-> **Honest summary:** with the `sevenz-turbo` backend, `r7z` now **beats** 7-Zip
-> on throughput for large text and incompressible data, while using ~3-4x less
-> memory in single-thread mode. Compression ratios are nearly identical.
-> 7-Zip still wins on many-small-files throughput. See [benchmark report](benchmark_report.md).
+> **Bottom line:** r7z is faster and uses less memory on large/incompressible data,
+> but 7-Zip still wins on many-small-files throughput. Pick based on your workload.
+> See [benchmark report](benchmark_report.md).
 
 ---
 
