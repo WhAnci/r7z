@@ -95,7 +95,11 @@ Measured: wall-clock time, archive ratio, peak RSS, single vs multi-thread.
 
 See full results: [benchmark_report.md](benchmark_report.md)
 
-![Compression time](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_compress.png)
+![Compression time (1 thread)](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_compress_1t.png)
+
+![Compression time (16 threads)](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_compress_16t.png)
+
+![Speedup (r7z vs 7z)](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_speedup.png)
 
 ![Decompression time](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_decompress.png)
 
@@ -107,6 +111,27 @@ See full results: [benchmark_report.md](benchmark_report.md)
 - (Windows) MSVC Build Tools
 - Python 3.10+ (for scripts)
 - 7-Zip (for comparison)
+
+
+## Benchmark summary (single thread, compress)
+
+| Scenario | r7z time | 7z time | r7z mem | 7z mem | ratio r7z | ratio 7z |
+|---|---|---|---|---|---|---|
+| A large text (500MB) | 11.1s | 16.6s | 101MB | 376MB | 0.02% | 0.02% |
+| B small files (10k) | 42.8s | 1.7s | 116MB | 381MB | 0.28% | 0.28% |
+| C random (200MB) | 17.1s | 64.5s | 101MB | 377MB | 100% | 100% |
+| D software pkg (200MB) | 10.0s | 26.0s | 102MB | 377MB | 50% | 50% |
+| E game assets (472MB) | 37.9s | 102.9s | 103MB | 377MB | 78% | 78% |
+| F user backup (213MB) | 14.3s | 35.5s | 102MB | 377MB | 51% | 50% |
+| G cold storage (1GB) | 43.7s | 53.0s | 101MB | 376MB | 0.02% | 0.02% |
+| H email/share (22MB) | 1.8s | 3.3s | 102MB | 257MB | 100% | 100% |
+| I SQL dump (1GB) | 55.0s | 65.9s | 101MB | 377MB | 0.02% | 0.02% |
+| J VM image (1GB) | 32.2s | 122.5s | 101MB | 377MB | 50% | 50% |
+| L huge file (2GB) | 184.1s | 654.9s | 101MB | 377MB | 100% | 100% |
+
+> r7z wins on throughput for large text, incompressible, and mixed data while using 2-4x less memory.
+> 7z still wins on many-small-files throughput (scenario B).
+
 
 ## License
 

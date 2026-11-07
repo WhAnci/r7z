@@ -75,11 +75,12 @@ def bench_one(scenario_key, tool, threads, mode):
         shutil.rmtree(work)
     work.mkdir(parents=True)
 
-    if scenario_key == "B":
-        src = src_dir
+    SINGLE = {"A": "biglog.txt", "C": "random.bin", "G": "archive.txt",
+              "I": "dump.sql", "J": "disk.img", "L": "huge.bin"}
+    if scenario_key in SINGLE:
+        src = src_dir / SINGLE[scenario_key]
     else:
-        fname = {"A": "biglog.txt", "C": "random.bin"}[scenario_key]
-        src = src_dir / fname
+        src = src_dir
 
     original_size = size_of(src)
 
@@ -130,7 +131,7 @@ def main():
 
     threads_list = [1, (os.cpu_count() or 4)]
     results = {}
-    for sk in ("A", "B", "C"):
+    for sk in ("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "L"):
         for tool in ("r7z", "7z"):
             if tool == "7z" and not SEVENZ.exists():
                 continue
