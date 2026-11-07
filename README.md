@@ -22,7 +22,7 @@
 | **Allocator churn** | Bounded, predictable buffers | Large solid-block arenas |
 | **Crash safety** | `panic=abort`, no segfaults in safe code | Possible on malformed input |
 | **Compression ratio** | Matches 7z on A/C (~0.02% / ~100%) | Reference |
-| **Speed (scenario A, 1 thread)** | ~11s (vs 7z ~17s) | ~17s |
+| **Speed (scenario A, 1 thread)** | ~12.8s (vs 7z ~16.6s) | ~16.6s |
 | **Speed (scenario A, 16 threads)** | ~1.6s (vs 7z ~2.6s) | ~2.6s |
 
 > **Honest summary:** with the `sevenz-turbo` backend, `r7z` now **beats** 7-Zip
@@ -50,7 +50,7 @@ r7z/
 ├── src/
 │ └── main.rs
 ├── scripts/
-│ ├── gen_testdata.py # generate scenarios A/B/C
+│ ├── gen_testdata.py # generate 11 scenarios
 │ └── benchmark.py # r7z vs 7z benchmark
 ├── docs/
 │ └── optimization.md # Rust vs C++ bottlenecks & tips
@@ -86,10 +86,18 @@ python scripts/gen_testdata.py # generates testdata/A,B,C
 python scripts/benchmark.py # writes benchmark_report.md
 ```
 
-Scenarios:
-- **A** — 500 MB highly compressible text (log-like)
+Scenarios (11, see benchmark_report.md for full results):
+- **A** — 500 MB highly compressible text
 - **B** — 10,000 small files (1–10 KB)
-- **C** — 200 MB incompressible random binary
+- **C** — 200 MB incompressible random
+- **D** — 200 MB software package (binaries)
+- **E** — 472 MB game assets
+- **F** — 213 MB user backup
+- **G** — 1 GB cold storage (level 9)
+- **H** — 22 MB email/share bundle
+- **I** — 1 GB SQL dump
+- **J** — 1 GB VM disk image
+- **L** — 2 GB single huge file
 
 Measured: wall-clock time, archive ratio, peak RSS, single vs multi-thread.
 
@@ -117,7 +125,7 @@ See full results: [benchmark_report.md](benchmark_report.md)
 
 | Scenario | r7z time | 7z time | r7z mem | 7z mem | ratio r7z | ratio 7z |
 |---|---|---|---|---|---|---|
-| A large text (500MB) | 11.1s | 16.6s | 101MB | 376MB | 0.02% | 0.02% |
+| A large text (500MB) | 12.8s | 16.6s | 101MB | 376MB | 0.02% | 0.02% |
 | B small files (10k) | 42.8s | 1.7s | 116MB | 381MB | 0.28% | 0.28% |
 | C random (200MB) | 17.1s | 64.5s | 101MB | 377MB | 100% | 100% |
 | D software pkg (200MB) | 10.0s | 26.0s | 102MB | 377MB | 50% | 50% |
