@@ -14,6 +14,11 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --release
       - run: cargo test --release
+      - run: |
+          cd /tmp
+          rm -rf r7zdbg && mkdir r7zdbg && cd r7zdbg
+          mkdir in && printf hello > in/hello.txt
+          ./target/release/r7z a out.7z in -m 5 -t 2; echo "exit=$?"
       - run: cargo fmt --check
       - run: cargo clippy -- -D warnings
       - run: ./target/release/r7z completions bash > /dev/null
