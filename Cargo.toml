@@ -13,9 +13,6 @@ clap = { version = "4.5", features = ["derive"] }
 clap_complete = "4.5"
 # 7z archive read/write (LZMA2 + solid blocks)
 sevenz-turbo = "0.29"
-# Low-level LZMA/XZ primitives (used for tuning experiments)
-lzma-rs = "0.3"
-xz2 = "0.1"
 # Parallelism
 rayon = "1.10"
 # Progress bars

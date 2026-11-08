@@ -10,6 +10,7 @@ use rayon::prelude::*;
 use sevenz_turbo::decompress_file;
 use sevenz_turbo::decompress_file_with_password;
 use sevenz_turbo::encoder_options::{AesEncoderOptions, Lzma2Options};
+use sevenz_turbo::ArchiveReader;
 use sevenz_turbo::{ArchiveWriter, EncoderConfiguration, Password};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -301,7 +302,7 @@ fn cmd_test(archive: &Path, password: &str) -> Result<()> {
         }
         Err(e) => {
             eprintln!("Test failed: {e}");
-            std::process::exit(1);
+            Err(anyhow::anyhow!(e))
         }
     }
 }
@@ -310,5 +311,9 @@ fn cmd_test(archive: &Path, password: &str) -> Result<()> {
 fn cmd_list(archive: &Path) -> Result<()> {
     let meta = fs::metadata(archive)?;
     println!("archive: {}  size: {} bytes", archive.display(), meta.len());
+    let reader = ArchiveReader::open(archive, Password::new("")).map_err(|e| anyhow::anyhow!(e))?;
+    for entry in &reader.archive().files {
+        println!("  {}  ({} bytes)", entry.name(), entry.size());
+    }
     Ok(())
 }

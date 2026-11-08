@@ -3,7 +3,13 @@ use std::process::Command;
 
 #[test]
 fn roundtrip_compress_extract() {
-    let tmp = std::env::temp_dir().join("r7z_test_roundtrip");
+    let tmp = std::env::temp_dir().join(format!(
+        "r7z_test_roundtrip_{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
     let _ = fs::remove_dir_all(&tmp);
     fs::create_dir_all(tmp.join("in")).unwrap();
     fs::write(tmp.join("in/hello.txt"), b"hello world\n").unwrap();
@@ -50,7 +56,13 @@ fn roundtrip_compress_extract() {
 
 #[test]
 fn list_command() {
-    let tmp = std::env::temp_dir().join("r7z_test_list");
+    let tmp = std::env::temp_dir().join(format!(
+        "r7z_test_list_{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
     let _ = fs::remove_dir_all(&tmp);
     fs::create_dir_all(tmp.join("in")).unwrap();
     fs::write(tmp.join("in/a.txt"), b"a").unwrap();
@@ -75,7 +87,13 @@ fn list_command() {
 
 #[test]
 fn password_roundtrip() {
-    let tmp = std::env::temp_dir().join("r7z_test_pw2");
+    let tmp = std::env::temp_dir().join(format!(
+        "r7z_test_pw2_{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
     let _ = fs::remove_dir_all(&tmp);
     fs::create_dir_all(tmp.join("in")).unwrap();
     fs::write(tmp.join("in/secret.txt"), b"top secret").unwrap();
