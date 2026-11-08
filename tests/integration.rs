@@ -13,14 +13,29 @@ fn roundtrip_compress_extract() {
     let bin = env!("CARGO_BIN_EXE_r7z");
 
     let status = Command::new(bin)
-        .args(["a", archive.to_str().unwrap(), tmp.join("in").to_str().unwrap(), "-m", "5", "-t", "2"])
+        .args([
+            "a",
+            archive.to_str().unwrap(),
+            tmp.join("in").to_str().unwrap(),
+            "-m",
+            "5",
+            "-t",
+            "2",
+        ])
         .status()
         .expect("run r7z a");
     assert!(status.success(), "compress failed");
 
     let extracted = tmp.join("extracted");
     let status = Command::new(bin)
-        .args(["x", archive.to_str().unwrap(), "-o", extracted.to_str().unwrap(), "-t", "2"])
+        .args([
+            "x",
+            archive.to_str().unwrap(),
+            "-o",
+            extracted.to_str().unwrap(),
+            "-t",
+            "2",
+        ])
         .status()
         .expect("run r7z x");
     assert!(status.success(), "extract failed");
@@ -42,7 +57,11 @@ fn list_command() {
     let archive = tmp.join("out.7z");
     let bin = env!("CARGO_BIN_EXE_r7z");
     Command::new(bin)
-        .args(["a", archive.to_str().unwrap(), tmp.join("in").to_str().unwrap()])
+        .args([
+            "a",
+            archive.to_str().unwrap(),
+            tmp.join("in").to_str().unwrap(),
+        ])
         .status()
         .unwrap();
     let out = Command::new(bin)
@@ -64,26 +83,46 @@ fn password_roundtrip() {
     let bin = env!("CARGO_BIN_EXE_r7z");
 
     let status = Command::new(bin)
-        .args(["a", archive.to_str().unwrap(), tmp.join("in").to_str().unwrap(), "-p", "mypass"])
-        .status().unwrap();
+        .args([
+            "a",
+            archive.to_str().unwrap(),
+            tmp.join("in").to_str().unwrap(),
+            "-p",
+            "mypass",
+        ])
+        .status()
+        .unwrap();
     assert!(status.success());
 
     let out = Command::new(bin)
         .args(["t", archive.to_str().unwrap(), "-p", "wrong"])
-        .output().unwrap();
+        .output()
+        .unwrap();
     assert!(!out.status.success());
 
     let out = Command::new(bin)
         .args(["t", archive.to_str().unwrap(), "-p", "mypass"])
-        .output().unwrap();
+        .output()
+        .unwrap();
     assert!(out.status.success());
 
     let extracted = tmp.join("out");
     let status = Command::new(bin)
-        .args(["x", archive.to_str().unwrap(), "-o", extracted.to_str().unwrap(), "-p", "mypass"])
-        .status().unwrap();
+        .args([
+            "x",
+            archive.to_str().unwrap(),
+            "-o",
+            extracted.to_str().unwrap(),
+            "-p",
+            "mypass",
+        ])
+        .status()
+        .unwrap();
     assert!(status.success());
-    assert_eq!(fs::read_to_string(extracted.join("secret.txt")).unwrap(), "top secret");
+    assert_eq!(
+        fs::read_to_string(extracted.join("secret.txt")).unwrap(),
+        "top secret"
+    );
 
     let _ = fs::remove_dir_all(&tmp);
 }

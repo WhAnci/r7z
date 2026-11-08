@@ -40,9 +40,9 @@
 - `t` — 아카이브 무결성 테스트
 - 압축 레벨 `-m 1..9` (별칭 `--mx`)
 - 스레드 수 `-t N` (0 = 모든 코어, 별칭 `--mmt`)
-- 비밀번호 암호화 `-p <password>`
-- 자동 확인 `-y`
-- 셸 자동완성: `r7z completions <bash|zsh|fish|powershell>`
+- 비밀번호 (암호화/복호화) `-p <password>`
+- 출력 디렉터리 (해제) `-o <dir>` (기본 `.`)
+- 셸 자동완성: `r7z completions <bash|elvish|fish|powershell|zsh>`
 - `indicatif` 기반 진행률 표시
 - `rayon` 기반 병렬 파일 스캔
 
@@ -55,7 +55,8 @@ r7z/
 │ └── main.rs
 ├── scripts/
 │ ├── gen_testdata.py
-│ └── benchmark.py
+│ ├── benchmark.py
+│ └── plot_benchmark.py
 ├── docs/
 │ └── optimization.md
 ├── .github/workflows/ci.yml

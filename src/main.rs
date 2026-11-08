@@ -4,14 +4,13 @@
 
 use anyhow::{Context, Result};
 use clap::{CommandFactory, Parser, Subcommand};
-use env_logger;
 use indicatif::{ProgressBar, ProgressStyle};
 use mimalloc::MiMalloc;
 use rayon::prelude::*;
-use sevenz_turbo::encoder_options::{AesEncoderOptions, Lzma2Options};
-use sevenz_turbo::{ArchiveWriter, EncoderConfiguration, Password};
 use sevenz_turbo::decompress_file;
 use sevenz_turbo::decompress_file_with_password;
+use sevenz_turbo::encoder_options::{AesEncoderOptions, Lzma2Options};
+use sevenz_turbo::{ArchiveWriter, EncoderConfiguration, Password};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -49,10 +48,6 @@ enum Commands {
         /// Password for encryption
         #[arg(short = 'p', long = "password", default_value = "")]
         password: String,
-
-        /// Assume yes to all prompts
-        #[arg(short = 'y', long = "yes", default_value_t = false)]
-        yes: bool,
     },
 
     /// Extract an archive  (7z x)
@@ -71,16 +66,10 @@ enum Commands {
         /// Password for decryption
         #[arg(short = 'p', long = "password", default_value = "")]
         password: String,
-
-        /// Assume yes to all prompts
-        #[arg(short = 'y', long = "yes", default_value_t = false)]
-        yes: bool,
     },
 
     /// List archive contents
-    L {
-        archive: PathBuf,
-    },
+    L { archive: PathBuf },
 
     /// Test archive integrity  (7z t)
     T {
@@ -117,14 +106,12 @@ fn run() -> Result<()> {
             level,
             threads,
             password,
-            yes: _,
         } => cmd_add(&archive, &inputs, level, threads, &password),
         Commands::X {
             archive,
             output,
             threads,
             password,
-            yes: _,
         } => cmd_extract(&archive, &output, threads, &password),
         Commands::L { archive } => cmd_list(&archive),
         Commands::T { archive, password } => cmd_test(&archive, &password),
@@ -145,7 +132,13 @@ fn resolve_threads(n: usize) -> usize {
 }
 
 /// `a` command.
-fn cmd_add(archive: &Path, inputs: &[PathBuf], level: u8, threads: usize, password: &str) -> Result<()> {
+fn cmd_add(
+    archive: &Path,
+    inputs: &[PathBuf],
+    level: u8,
+    threads: usize,
+    password: &str,
+) -> Result<()> {
     let t0 = Instant::now();
     let nth = resolve_threads(threads) as u32;
 

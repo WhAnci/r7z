@@ -40,9 +40,9 @@
 - `t` — 测试压缩包完整性
 - 压缩级别 `-m 1..9`（别名 `--mx`）
 - 线程数 `-t N`（0 = 所有核心，别名 `--mmt`）
-- 密码加密 `-p <password>`
-- 自动确认 `-y`
-- Shell 自动补全：`r7z completions <bash|zsh|fish|powershell>`
+- 密码（加密/解密） `-p <password>`
+- 输出目录（解压） `-o <dir>`（默认 `.`）
+- Shell 自动补全：`r7z completions <bash|elvish|fish|powershell|zsh>`
 - 基于 `indicatif` 的进度条
 - 基于 `rayon` 的并行文件扫描
 
@@ -55,7 +55,8 @@ r7z/
 │ └── main.rs
 ├── scripts/
 │ ├── gen_testdata.py
-│ └── benchmark.py
+│ ├── benchmark.py
+│ └── plot_benchmark.py
 ├── docs/
 │ └── optimization.md
 ├── .github/workflows/ci.yml

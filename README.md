@@ -42,9 +42,9 @@
 - `t` — test archive integrity
 - Compression level `-m 1..9` (alias `--mx`)
 - Thread count `-t N` (0 = all cores, alias `--mmt`)
-- Password encryption `-p <password>`
-- Assume yes `-y`
-- Shell completions: `r7z completions <bash|zsh|fish|powershell>`
+- Password (encryption/decryption) `-p <password>`
+- Output directory (extract) `-o <dir>` (default `.`)
+- Shell completions: `r7z completions <bash|elvish|fish|powershell|zsh>`
 - Progress bars via `indicatif`
 - Parallel file scanning via `rayon`
 
@@ -57,7 +57,8 @@ r7z/
 │ └── main.rs
 ├── scripts/
 │ ├── gen_testdata.py # generate 11 scenarios
-│ └── benchmark.py # r7z vs 7z benchmark
+│ ├── benchmark.py # r7z vs 7z benchmark
+│ └── plot_benchmark.py # plot benchmark results
 ├── docs/
 │ └── optimization.md # Rust vs C++ bottlenecks & tips
 ├── .github/workflows/ci.yml
