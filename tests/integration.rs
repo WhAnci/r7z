@@ -1,15 +1,21 @@
 use std::fs;
 use std::process::Command;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+static TEST_COUNTER: AtomicU64 = AtomicU64::new(0);
+
+fn unique_dir(name: &str) -> std::path::PathBuf {
+    std::env::temp_dir().join(format!(
+        "r7z_test_{}_{}_{}",
+        name,
+        std::process::id(),
+        TEST_COUNTER.fetch_add(1, Ordering::Relaxed)
+    ))
+}
 
 #[test]
 fn roundtrip_compress_extract() {
-    let tmp = std::env::temp_dir().join(format!(
-        "r7z_test_roundtrip_{}",
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-    ));
+    let tmp = unique_dir("roundtrip");
     let _ = fs::remove_dir_all(&tmp);
     fs::create_dir_all(tmp.join("in")).unwrap();
     fs::write(tmp.join("in/hello.txt"), b"hello world\n").unwrap();
@@ -56,13 +62,7 @@ fn roundtrip_compress_extract() {
 
 #[test]
 fn list_command() {
-    let tmp = std::env::temp_dir().join(format!(
-        "r7z_test_list_{}",
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-    ));
+    let tmp = unique_dir("list");
     let _ = fs::remove_dir_all(&tmp);
     fs::create_dir_all(tmp.join("in")).unwrap();
     fs::write(tmp.join("in/a.txt"), b"a").unwrap();
@@ -87,13 +87,7 @@ fn list_command() {
 
 #[test]
 fn password_roundtrip() {
-    let tmp = std::env::temp_dir().join(format!(
-        "r7z_test_pw2_{}",
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-    ));
+    let tmp = unique_dir("pw2");
     let _ = fs::remove_dir_all(&tmp);
     fs::create_dir_all(tmp.join("in")).unwrap();
     fs::write(tmp.join("in/secret.txt"), b"top secret").unwrap();
