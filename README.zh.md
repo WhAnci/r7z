@@ -41,6 +41,7 @@
 - 压缩级别 `-m 1..9`（别名 `--mx`）
 - 线程数 `-t N`（0 = 所有核心，别名 `--mmt`）
 - 密码（加密/解密） `-p <password>`
+- 自动确认 `-y`
 - 输出目录（解压） `-o <dir>`（默认 `.`）
 - Shell 自动补全：`r7z completions <bash|elvish|fish|powershell|zsh>`
 - 基于 `indicatif` 的进度条

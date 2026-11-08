@@ -43,6 +43,7 @@
 - Compression level `-m 1..9` (alias `--mx`)
 - Thread count `-t N` (0 = all cores, alias `--mmt`)
 - Password (encryption/decryption) `-p <password>`
+- Assume yes `-y`
 - Output directory (extract) `-o <dir>` (default `.`)
 - Shell completions: `r7z completions <bash|elvish|fish|powershell|zsh>`
 - Progress bars via `indicatif`

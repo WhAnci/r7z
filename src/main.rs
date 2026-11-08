@@ -48,6 +48,9 @@ enum Commands {
         /// Password for encryption
         #[arg(short = 'p', long = "password", default_value = "")]
         password: String,
+        /// Assume yes to all prompts
+        #[arg(short = 'y', long = "yes", default_value_t = false)]
+        yes: bool,
     },
 
     /// Extract an archive  (7z x)
@@ -66,6 +69,9 @@ enum Commands {
         /// Password for decryption
         #[arg(short = 'p', long = "password", default_value = "")]
         password: String,
+        /// Assume yes to all prompts
+        #[arg(short = 'y', long = "yes", default_value_t = false)]
+        yes: bool,
     },
 
     /// List archive contents
@@ -106,12 +112,14 @@ fn run() -> Result<()> {
             level,
             threads,
             password,
+            yes: _,
         } => cmd_add(&archive, &inputs, level, threads, &password),
         Commands::X {
             archive,
             output,
             threads,
             password,
+            yes: _,
         } => cmd_extract(&archive, &output, threads, &password),
         Commands::L { archive } => cmd_list(&archive),
         Commands::T { archive, password } => cmd_test(&archive, &password),
