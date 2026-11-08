@@ -4,8 +4,11 @@
 
 [![CI](https://github.com/WhAnci/r7z/actions/workflows/ci.yml/badge.svg)](https://github.com/WhAnci/r7z/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg)](https://www.rust-lang.org)
 
 **语言：** [English](README.md) (默认) · [한국어](README.ko.md) · 中文
+
+![Demo](docs/demo.gif)
 
 ---
 
@@ -34,8 +37,12 @@
 - `a` — 将文件/目录加入 `.7z` 压缩包
 - `x` — 解压压缩包
 - `l` — 列出压缩包元数据
-- 压缩级别 `-m 1..9`
-- 线程数 `-t N`（0 = 所有核心）
+- `t` — 测试压缩包完整性
+- 压缩级别 `-m 1..9`（别名 `--mx`）
+- 线程数 `-t N`（0 = 所有核心，别名 `--mmt`）
+- 密码加密 `-p <password>`
+- 自动确认 `-y`
+- Shell 自动补全：`r7z completions <bash|zsh|fish|powershell>`
 - 基于 `indicatif` 的进度条
 - 基于 `rayon` 的并行文件扫描
 
@@ -61,9 +68,16 @@ r7z/
 ## 快速开始
 
 ```bash
+# 构建
 cargo build --release
+
+# 压缩
 ./target/release/r7z a out.7z ./mydir -m 9 -t 8
+
+# 解压
 ./target/release/r7z x out.7z -o extracted/ -t 8
+
+# 列表
 ./target/release/r7z l out.7z
 ```
 
@@ -72,19 +86,45 @@ Windows: `target\release\r7z.exe`。
 ## 基准测试
 
 ```bash
-python scripts/gen_testdata.py
-python scripts/benchmark.py
+python scripts/gen_testdata.py # generates testdata/A,B,C
+python scripts/benchmark.py # writes benchmark_report.md
 ```
+
+场景 (11 个，完整结果见 benchmark_report.md)：
+- **A** — 500 MB 高可压文本
+- **B** — 10,000 个小文件 (1-10 KB)
+- **C** — 200 MB 不可压随机数据
+- **D** — 200 MB 软件包 (二进制)
+- **E** — 472 MB 游戏资源
+- **F** — 213 MB 用户备份
+- **G** — 1 GB 冷存储 (级别 9)
+- **H** — 22 MB 邮件/分享包
+- **I** — 1 GB SQL 转储
+- **J** — 1 GB VM 磁盘镜像
+- **L** — 2 GB 单个超大文件
+
+实测：墙钟时间、压缩比、峰值 RSS、单线程 vs 多线程。
 
 详细结果：[benchmark_report.md](benchmark_report.md)
 
 
-![Compression time](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_compress.png)
+![压缩时间 (1 线程)](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_compress_1t.png)
 
-![Decompression time](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_decompress.png)
+![压缩时间 (16 线程)](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_compress_16t.png)
 
-![Peak memory](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_memory.png)
+![速度提升 (r7z vs 7z)](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_speedup.png)
 
+![解压时间](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_decompress.png)
+
+![峰值内存](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_memory.png)
+
+
+## 构建要求
+
+- Rust 1.75+ (`rustup`)
+- (Windows) MSVC Build Tools
+- Python 3.10+ (用于脚本)
+- 7-Zip (用于对比)
 
 ## 基准测试摘要（单线程，压缩）
 

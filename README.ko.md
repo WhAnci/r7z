@@ -4,8 +4,11 @@
 
 [![CI](https://github.com/WhAnci/r7z/actions/workflows/ci.yml/badge.svg)](https://github.com/WhAnci/r7z/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg)](https://www.rust-lang.org)
 
 **언어:** [English](README.md) (기본) · 한국어 · [中文](README.zh.md)
+
+![Demo](docs/demo.gif)
 
 ---
 
@@ -34,8 +37,12 @@
 - `a` — 파일/디렉터리를 `.7z` 아카이브에 추가
 - `x` — 아카이브 해제
 - `l` — 아카이브 메타데이터 목록
-- 압축 레벨 `-m 1..9`
-- 스레드 수 `-t N` (0 = 모든 코어)
+- `t` — 아카이브 무결성 테스트
+- 압축 레벨 `-m 1..9` (별칭 `--mx`)
+- 스레드 수 `-t N` (0 = 모든 코어, 별칭 `--mmt`)
+- 비밀번호 암호화 `-p <password>`
+- 자동 확인 `-y`
+- 셸 자동완성: `r7z completions <bash|zsh|fish|powershell>`
 - `indicatif` 기반 진행률 표시
 - `rayon` 기반 병렬 파일 스캔
 
@@ -61,9 +68,16 @@ r7z/
 ## 빠른 시작
 
 ```bash
+# 빌드
 cargo build --release
+
+# 압축
 ./target/release/r7z a out.7z ./mydir -m 9 -t 8
+
+# 해제
 ./target/release/r7z x out.7z -o extracted/ -t 8
+
+# 목록
 ./target/release/r7z l out.7z
 ```
 
@@ -72,19 +86,45 @@ Windows: `target\release\r7z.exe`.
 ## 벤치마크
 
 ```bash
-python scripts/gen_testdata.py
-python scripts/benchmark.py
+python scripts/gen_testdata.py # generates testdata/A,B,C
+python scripts/benchmark.py # writes benchmark_report.md
 ```
+
+시나리오 (11개, 전체 결과는 benchmark_report.md 참고):
+- **A** — 500 MB 고압축 가능 텍스트
+- **B** — 10,000개 소형 파일 (1-10 KB)
+- **C** — 200 MB 비압축 랜덤
+- **D** — 200 MB 소프트웨어 패키지 (바이너리)
+- **E** — 472 MB 게임 에셋
+- **F** — 213 MB 사용자 백업
+- **G** — 1 GB 장기 보관 (레벨 9)
+- **H** — 22 MB 이메일/공유 번들
+- **I** — 1 GB SQL 덤프
+- **J** — 1 GB VM 디스크 이미지
+- **L** — 2 GB 단일 대용량 파일
+
+측정 항목: 벽시계 시간, 아카이브 비율, 피크 RSS, 단일 vs 멀티스레드.
 
 자세한 결과: [benchmark_report.md](benchmark_report.md)
 
 
-![Compression time](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_compress.png)
+![압축 시간 (1스레드)](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_compress_1t.png)
 
-![Decompression time](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_decompress.png)
+![압축 시간 (16스레드)](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_compress_16t.png)
 
-![Peak memory](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_memory.png)
+![속도 향상 (r7z vs 7z)](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_speedup.png)
 
+![해제 시간](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_time_decompress.png)
+
+![피크 메모리](https://raw.githubusercontent.com/WhAnci/r7z/main/docs/images/bench_memory.png)
+
+
+## 빌드 요구사항
+
+- Rust 1.75+ (`rustup`)
+- (Windows) MSVC Build Tools
+- Python 3.10+ (스크립트용)
+- 7-Zip (비교용)
 
 ## 벤치마크 요약 (단일 스레드, 압축)
 
