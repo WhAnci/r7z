@@ -7,8 +7,9 @@ Thanks for your interest! r7z is a small, focused project.
 ```bash
 git clone https://github.com/WhAnci/r7z
 cd r7z
-cargo build
-cargo test
+cargo build --release
+cargo test --release
+cargo fmt --check
 cargo clippy -- -D warnings
 ```
 
